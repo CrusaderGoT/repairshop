@@ -13,6 +13,7 @@ import { relations } from 'drizzle-orm';
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
   firstName: varchar("first_name").notNull(),
+  lastName: varchar("last_name").notNull(),
   email: varchar("email").notNull().unique(),
   phone: varchar("phone").notNull().unique(),
   address: varchar("address").notNull(),
@@ -21,17 +22,17 @@ export const customers = pgTable("customers", {
   zip: varchar("zip", { length: 10 }),
   notes: text("notes"),
   active: boolean("active").notNull().default(true),
-  created: timestamp("timestamp").notNull().defaultNow(),
-})
+  created: timestamp("created").notNull().defaultNow(),
+});
 
-export const tickets = pgTable("customers", {
+export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").notNull().references(() => customers.id),
   title: varchar("title").notNull(),
   description: varchar("description"),
   completed: boolean("completed").notNull().default(false),
   tech: varchar("tech").notNull().default("unassigned"),
-  created: timestamp("timestamp").notNull().defaultNow(),
+  created: timestamp("created").notNull().defaultNow(),
   updated: timestamp("updated").notNull().defaultNow().$onUpdate(() => new Date),
 });
 
