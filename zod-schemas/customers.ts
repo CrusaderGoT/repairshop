@@ -5,23 +5,23 @@ import { z } from "zod";
 
 
 export const insertCustomerSchema = createInsertSchema(customers, {
-    firstName: (schema) => schema.min(2, "First Name Should be more than 2 letters")
-    .regex(/^[a-zA-Z]$/, "First Name most contain only letters"),
+    firstName: (schema) => schema.min(2, "First Name is required")
+    .regex(/[a-zA-Z]$/, "First Name most contain only letters"),
 
-    lastName: (schema) => schema.min(2, "Last Name Should be more than 2 letters")
-    .regex(/^[a-zA-Z]$/, "First Name most contain only letters"),
+    lastName: (schema) => schema.min(2, "Last Name is required")
+    .regex(/[a-zA-Z]$/, "Last Name most contain only letters"),
 
-    address: (schema) => schema.nonempty("adress is required"), 
+    address: (schema) => schema.nonempty("address is required"), 
 
     email: (schema) => schema.email("not a valid email"),
     
     city: (schema) => schema.nonempty("city is required"),
 
-    state: (schema) => schema.max(2, "State should be exactly 2 characters"),
+    state: (schema) => schema.max(2, "State should be exactly 2 characters").nonempty(),
 
     zip: (schema) => schema.regex(/^\d{6}$/, "invalid zip code"),
 
-    phone: (schema) => schema.regex(/^\+234|\d{1}-(\d{3})-(\d{4})$/, "invalid phone number format. Use +234-XXX-XXXX or 0-XXX-XXXX"),
+    phone: (schema) => schema.regex(/^(\+234|\d{1})\-?(\-?(\d{3}\-?\d{3}\-?\d{4}))$/, "invalid phone number format. Use +234-XXX-XXXX or 0-XXX-XXXX"),
 
 
 });

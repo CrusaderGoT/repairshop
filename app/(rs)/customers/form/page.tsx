@@ -2,6 +2,18 @@ import { BackButton } from "@/components/BackButton";
 import { getCustomer } from "@/drizzle/actions/customer";
 import CustomerForm from "./CustomerForm";
 
+export async function generateMetadata({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | undefined }>
+}) {
+    const { customerId } = await searchParams;
+     
+    if (!customerId) return {title: "New Customer"};
+
+    return {title: `Edit Customer id #${customerId}`};
+}
+
 export default async function CustomerFormPage({
     searchParams,
 }: {
@@ -9,7 +21,7 @@ export default async function CustomerFormPage({
 }) {
     try {
 
-        const { customerId } = await searchParams
+        const { customerId } = await searchParams;
 
         // Edit Form if Customer
         if (customerId) {

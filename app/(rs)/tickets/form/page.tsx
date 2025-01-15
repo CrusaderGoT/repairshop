@@ -2,6 +2,28 @@ import { getTicket } from "@/drizzle/actions/tickets";
 import { BackButton } from "@/components/BackButton";
 import TicketForm from "./TicketForm";
 import { getCustomer } from "@/drizzle/actions/customer";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { Users, init as kindeInit } from "@kinde/management-api-js"
+
+export async function generateMetadata({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | undefined }>
+}) {
+    const { customerId, ticketId } = await searchParams;
+     
+    if (!customerId && !ticketId) return {
+        title: "Missing Ticket ID or Customer ID"
+    }
+
+    if (customerId) return {
+        title: `New Ticket for Customer #${customerId}`
+    }
+
+    if (ticketId) return {
+        title: `Edit or View Ticket #${ticketId}`
+    }
+}
 
 export default async function TicketFormPage({
     searchParams,
@@ -9,6 +31,15 @@ export default async function TicketFormPage({
 
     try {
         const { ticketId, customerId } = await searchParams;
+
+        const { getPermission, getUser } = getKindeServerSession();
+
+        const [ managerPermission, user ] = await Promise.all([
+            getPermission("manager"),
+            getUser()
+        ]);
+
+        const isManager = managerPermission?.isGranted;
 
         if (!ticketId && !customerId) {
             return (
@@ -36,7 +67,7 @@ export default async function TicketFormPage({
                 );
             }
 
-            if (!customer.id) {
+            if (!customer.active) {
                 return (
                     <>
                         <h2 className="text-2xl mb-2">
@@ -48,7 +79,22 @@ export default async function TicketFormPage({
             }
 
             // return new ticket form
-            return <TicketForm customer={customer} />
+            if (isManager) {
+                kindeInit(); // initialiazes the kinde management server api
+
+                const { users } = await Users.getUsers();
+
+                const techs = users ? users.map(user => ({
+                    id: user.email as string, description:user.email as string
+                })) : [];
+
+                return <TicketForm customer={customer} techs={techs} isEditable={isManager} />
+
+            } else {
+                return <TicketForm customer={customer} />
+            }
+            
+            
         }
 
         if (ticketId) {
@@ -66,7 +112,22 @@ export default async function TicketFormPage({
             const customer = await getCustomer(ticket.customerId)
 
             // return edit ticket form
-            return <TicketForm customer={customer} ticket={ticket} />
+            if (isManager) {
+                kindeInit(); // initialiazes the kinde management server api
+
+                const { users } = await Users.getUsers();
+
+                const techs = users ? users.map(user => ({
+                    id: user.email as string, description:user.email as string
+                })) : [];
+
+                return <TicketForm customer={customer} techs={techs} ticket={ticket} />
+
+            } else {
+                const isEditable = user.email === ticket.tech;
+
+                return <TicketForm customer={customer} ticket={ticket} isEditable={isEditable} />
+            }
         }
 
             
