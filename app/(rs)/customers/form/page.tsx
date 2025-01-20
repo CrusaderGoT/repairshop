@@ -1,5 +1,5 @@
 import { BackButton } from "@/components/BackButton";
-import { getCustomer } from "@/drizzle/actions/customer";
+import { getCustomer } from "@/drizzle/actions/customer-actions";
 import CustomerForm from "./CustomerForm";
 
 export async function generateMetadata({

@@ -10,6 +10,12 @@ import { TextAreaWithLabel } from "@/components/inputs/TextAreaWithLable";
 import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
 import { CheckBoxWithLabel } from "@/components/inputs/CheckBoxWithLabel";
 import { Button } from "@/components/ui/button";
+import { useAction } from "next-safe-action/hooks";
+import { useToast } from "@/hooks/use-toast";
+import { LoaderCircle } from "lucide-react";
+import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
+import { saveTicketAction } from "@/drizzle/actions/ticket-actions";
+
 
 
 type ticketProps = {
@@ -26,6 +32,8 @@ export default function TicketForm({ customer, ticket, techs, isEditable = true 
 
     const isManager = Array.isArray(techs);
 
+    const { toast } = useToast();
+
     const defaultValues: insertTicketSchemaType = {
         id: ticket?.id ?? "New",
         title: ticket?.title ?? "",
@@ -41,12 +49,39 @@ export default function TicketForm({ customer, ticket, techs, isEditable = true 
         defaultValues,
     })
 
+    const {
+        execute: executeSave,
+        result: saveResult,
+        isPending: isSaving,
+        reset: resetSaveAction,
+    } = useAction(saveTicketAction, {
+        onError() {
+            //toast user
+            toast({
+                variant: "destructive",
+                title: "Error! ❌",
+                description: "Save Failed",
+            })
+        },
+        onSuccess({ data }) {
+            if (data?.messsage) {
+                //toast user
+                toast({
+                    variant: "default",
+                    title: "Success! 🎉",
+                    description: data.messsage,
+                })
+            }   
+        },
+    });
+
     async function submitForm(data: insertTicketSchemaType) {
-        console.log(data)   
+        executeSave(data); 
     }
 
     return (
         <div className="flex flex-col gap-1 sm:px-8 p-4 border rounded">
+            <DisplayServerActionResponse result={saveResult} />
             <div>
                 <h2 className="text-2xl font-bold">
                     {ticket?.id && isEditable ? `Edit Ticket #${ticket.id}`
@@ -136,13 +171,24 @@ export default function TicketForm({ customer, ticket, techs, isEditable = true 
                                         className="w-3/4"
                                         variant="default"
                                         title="save"
-                                    >Save</Button>
+                                        disabled={isSaving}
+                                    >
+                                        {
+                                        isSaving ? (
+                                            <>
+                                                <LoaderCircle className="animate-spin" /> Saving
+                                            </>
+                                        ) : "Save"}
+                                    </Button>
 
                                     <Button
                                         type="button"
                                         variant="destructive"
                                         title="Reset"
-                                        onClick={() => form.reset(defaultValues)}
+                                        onClick={() => {
+                                            form.reset(defaultValues);
+                                            resetSaveAction();
+                                        }}
                                     >Reset</Button>
 
                                 </div>

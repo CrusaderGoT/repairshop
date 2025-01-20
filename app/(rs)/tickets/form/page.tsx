@@ -1,7 +1,7 @@
-import { getTicket } from "@/drizzle/actions/tickets";
+import { getTicket } from "@/drizzle/actions/ticket-actions";
 import { BackButton } from "@/components/BackButton";
 import TicketForm from "./TicketForm";
-import { getCustomer } from "@/drizzle/actions/customer";
+import { getCustomer } from "@/drizzle/actions/customer-actions";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { Users, init as kindeInit } from "@kinde/management-api-js"
 
