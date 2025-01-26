@@ -2,7 +2,7 @@
 
 import { eq, ilike, or } from "drizzle-orm";
 import { db } from "../db";
-import { customers, tickets } from "../schema";
+import { customers, tickets } from "../schemas";
 import { actionClient } from "@/lib/safe-action";
 import { insertTicketSchemaType, insertTicketSchema } from "@/zod-schemas/tickets";
 import { flattenValidationErrors } from "next-safe-action";

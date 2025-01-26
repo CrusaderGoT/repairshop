@@ -1,5 +1,7 @@
 import CustomerSearch from "./CustomerSearch";
 import { getCustomerSearch } from "@/drizzle/actions/customer-actions";
+import CustomerTable from "./CustomerTable";
+
 
 export async function generateMetadata({
     searchParams,
@@ -27,9 +29,9 @@ export default async function Customers({
     return (
         <>
             <CustomerSearch />
-            <p>
-                {JSON.stringify(results)}
-            </p>
+            {results.length ? <CustomerTable data={results} /> : (
+                <p className="mt-4">No results found</p>
+            )}
         </>
     )
 }

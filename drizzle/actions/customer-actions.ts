@@ -1,13 +1,14 @@
 "use server"
 
 import { db } from "@/drizzle/db";
-import { customers } from "@/drizzle/schema";
+import { customers } from "@/drizzle/schemas";
 import { eq, ilike, or } from "drizzle-orm";
 import { flattenValidationErrors } from "next-safe-action";
 import { redirect } from "next/navigation";
 import { actionClient } from "@/lib/safe-action";
 import { insertCustomerSchema, insertCustomerSchemaType } from "@/zod-schemas/customers";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { sql } from "drizzle-orm";
 
 export async function getCustomer(id: number) {
     const [ Customer ] = await db.select()
@@ -71,15 +72,12 @@ export async function getCustomerSearch(searchText: string) {
     const results = await db.select().from(customers)
         .where(
             or(
-                ilike(customers.firstName, `%${searchText}%`),
-                ilike(customers.lastName, `%${searchText}%`),
-                ilike(customers.address, `%${searchText}%`),
                 ilike(customers.email, `%${searchText}%`),
                 ilike(customers.phone, `%${searchText}%`),
                 ilike(customers.zip, `%${searchText}%`),
                 ilike(customers.city, `%${searchText}%`),
-                ilike(customers.state, `%${searchText}%`),
-                ilike(customers.notes, `%${searchText}%`),
+                sql`lower(concat(${customers.firstName}, ' ', ${customers.lastName})) 
+                LIKE ${`%${searchText.toLowerCase().replace(' ', '%')}%`}`,
             )
         );
     
