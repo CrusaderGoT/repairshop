@@ -1,5 +1,6 @@
 import TicketSearch from "./TicketSearch";
 import { getOpenTickets, getTicketSearch } from "@/drizzle/actions/ticket-actions";
+import TicketTable from "./TicketTable";
 
 export async function generateMetadata({
     searchParams,
@@ -26,7 +27,9 @@ export default async function Tickets({
         return (
             <>
                 <TicketSearch />
-                <p>{JSON.stringify(results)}</p>
+                {
+                results.length ? <TicketTable data={results} /> : <p className="mt-4">No open tickets found</p>
+                }
             </>
         )
     }
@@ -36,9 +39,9 @@ export default async function Tickets({
     return (
         <>
             <TicketSearch />
-            <p>
-                {JSON.stringify(results)}
-            </p>
+            {
+                results.length ? <TicketTable data={results} /> : <p className="mt-4">No tickets found</p>
+            }
         </>
     )
 }

@@ -37,7 +37,7 @@ export default function TicketForm({ customer, ticket, techs, isEditable = true 
     const defaultValues: insertTicketSchemaType = {
         id: ticket?.id ?? "New",
         title: ticket?.title ?? "",
-        tech: ticket?.tech ?? "new-ticket@example.com",
+        tech: ticket?.tech.toLowerCase() ?? "new-ticket@example.com",
         customerId: ticket?.customerId ?? customer.id,
         description: ticket?.description ?? "",
         completed: ticket?.completed ?? false,

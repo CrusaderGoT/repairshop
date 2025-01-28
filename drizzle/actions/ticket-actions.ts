@@ -1,6 +1,6 @@
 "use server"
 
-import { eq, ilike, or } from "drizzle-orm";
+import { eq, ilike, or, sql, asc } from "drizzle-orm";
 import { db } from "../db";
 import { customers, tickets } from "../schemas";
 import { actionClient } from "@/lib/safe-action";
@@ -38,7 +38,7 @@ export const saveTicketAction = actionClient
                 customerId: ticket.customerId,
                 title: ticket.title,
                 ...(ticket.description?.trim() ? {description: ticket.description} : {}),
-                tech: ticket.tech,
+                tech: ticket.tech.toLowerCase(),
                 completed: ticket.completed,
             }).returning({ insertedId: tickets.id })
 
@@ -60,49 +60,52 @@ export const saveTicketAction = actionClient
 
 export async function getTicketSearch(searchText: string) {
     const results = await db.select({
+        id: tickets.id,
         ticketDate: tickets.created,
         title: tickets.title,
         firstName: customers.firstName,
         lastName: customers.lastName,
         email: customers.email,
         tech: tickets.tech,
+        completed: tickets.completed,
 
     })
         .from(tickets)
         .leftJoin(customers, eq(customers.id, tickets.customerId))
         .where(
             or(
-                ilike(tickets.description, `%${searchText}%`),
                 ilike(tickets.title, `%${searchText}%`),
                 ilike(tickets.tech, `%${searchText}%`),
-                ilike(customers.firstName, `%${searchText}%`),
-                ilike(customers.lastName, `%${searchText}%`),
-                ilike(customers.address, `%${searchText}%`),
                 ilike(customers.email, `%${searchText}%`),
                 ilike(customers.phone, `%${searchText}%`),
                 ilike(customers.zip, `%${searchText}%`),
                 ilike(customers.city, `%${searchText}%`),
-                ilike(customers.state, `%${searchText}%`),
-                ilike(customers.notes, `%${searchText}%`),
+                sql`lower(concat(${customers.firstName}, ' ', ${customers.lastName})) 
+                LIKE ${`%${searchText.toLowerCase().replace(' ', '%')}%`}`,
             )
-        );
+        ).orderBy(asc(tickets.created));
     
     return results;
 }
 
 export async function getOpenTickets() {
     const results = await db.select({
+        id: tickets.id,
         ticketDate: tickets.created,
         title: tickets.title,
         firstName: customers.firstName,
         lastName: customers.lastName,
         email: customers.email,
         tech: tickets.tech,
+        completed: tickets.completed
 
     })
         .from(tickets)
         .leftJoin(customers, eq(tickets.customerId, customers.id))
-        .where(eq(tickets.completed, false));
+        .where(eq(tickets.completed, false))
+        .orderBy(asc(tickets.created));
     
     return results;
 }
+
+export type TicketSearchType = Awaited<ReturnType<typeof getTicketSearch>>

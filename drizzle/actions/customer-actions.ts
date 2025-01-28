@@ -38,7 +38,7 @@ export const saveCustomerAction = actionClient
             const [ result ] = await db.insert(customers).values({
                 firstName:customer.firstName,
                 lastName: customer.lastName,
-                email: customer.email,
+                email: customer.email.toLowerCase(),
                 phone: customer.phone,
                 ...(customer.notes?.trim() ? { notes: customer.notes } : {}),
                 city: customer.city,
