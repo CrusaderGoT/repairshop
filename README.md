@@ -29,7 +29,7 @@ The Repairshop repository is designed to manage and streamline the operations of
 
 4. Start the application:
    ```bash
-   npm start
+   npm run dev
    ```
 
 ## Usage
@@ -45,7 +45,3 @@ We welcome contributions! Please read our [contributing guidelines](CONTRIBUTING
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
----
-
-You can customize this description further to match the specific details and features of your project.
