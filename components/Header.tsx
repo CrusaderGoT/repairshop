@@ -16,9 +16,9 @@ export default function Header() {
 
                 <div className='flex items-center gap-2'>
 
-                    <NavButton href='/home' label='home' icon={HomeIcon} />
+                    <NavButton href='/tickets' label='home' icon={HomeIcon} />
 
-                    <Link href={"/home"} className='flex justify-center items-center
+                    <Link href={"/tickets"} className='flex justify-center items-center
                     gap-2' title='Home'>
                         <h1 className='hidden sm:block text-xl font-bold m-0 mt-l'>
                             Computer Repair Shop

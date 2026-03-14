@@ -79,7 +79,7 @@ export async function getCustomerSearch(searchText: string) {
                 sql`lower(concat(${customers.firstName}, ' ', ${customers.lastName})) 
                 LIKE ${`%${searchText.toLowerCase().replace(' ', '%')}%`}`,
             )
-        );
+        ).orderBy(customers.lastName);
     
     return results;
 }

@@ -33,8 +33,9 @@ import {
     ArrowUp
 } from "lucide-react";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { usePooling } from "@/hooks/use-pooling";
+import { useState, useMemo } from "react";
 import Filter from "@/components/react-table/Filter";
 import { Button } from "@/components/ui/button";
 
@@ -47,15 +48,23 @@ type RowType = TicketSearchType[0];
 
 export default function TicketTable({data }: TableProps) {
     const router = useRouter();
+    const searchParam = useSearchParams();
 
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
     const [sorting, setSorting] = useState<SortingState>([
         {
             id: "ticketDate",
-            desc: false, // false for ascendending
+            desc: true, // false for ascendending
         }
     ])
+
+    usePooling(searchParam.get('searchText'), 300000);
+
+    const pageIndex = useMemo(() => {
+        const page = searchParam.get("page");
+        return page ? parseInt(page) - 1 : 0;
+    }, [searchParam])
 
     const columnHeaderArray: Array<keyof RowType> = [
         "ticketDate",
@@ -66,6 +75,14 @@ export default function TicketTable({data }: TableProps) {
         "email",
         "completed",
     ]
+
+    const columnWidths = {
+        completed: 150,
+        ticketDate: 150,
+        title: 250,
+        tech: 250,
+        email: 250,
+    }
 
     const columnHelper = createColumnHelper<RowType>();
 
@@ -83,15 +100,15 @@ export default function TicketTable({data }: TableProps) {
 
             if (columnName === "completed") {
                 return value
-                    ? "Completed"
+                    ? "CLOSED"
                     :"OPEN"
-
             }
 
             return value;
 
         }, {
             id: columnName,
+            size: columnWidths[columnName as keyof typeof columnWidths ?? undefined],
             header: ({ column }) => {
                 return (
                     <Button
@@ -139,9 +156,8 @@ export default function TicketTable({data }: TableProps) {
         state: {
             sorting,
             columnFilters,
-        },
-        initialState: {
             pagination: {
+                pageIndex: pageIndex,
                 pageSize: 10,
             },
         },
@@ -162,7 +178,7 @@ export default function TicketTable({data }: TableProps) {
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id} className="bg-secondary p-1">
+                                        <TableHead key={header.id} className="bg-secondary p-1" style={{width: header.getSize()}}>
                                             <div>
                                                 {header.isPlaceholder
                                                     ? null
@@ -175,7 +191,10 @@ export default function TicketTable({data }: TableProps) {
 
                                             {header.column.getCanFilter() ? (
                                                 <div className="grid place-content-start">
-                                                    <Filter column={header.column} />
+                                                    <Filter
+                                                        column={header.column}
+                                                        filteredRows={table.getFilteredRowModel().rows.map(row => row.getValue(header.column.id))}
+                                                    />
                                                 </div>
                                             ) : null}   
                                         </TableHead>
@@ -206,8 +225,8 @@ export default function TicketTable({data }: TableProps) {
                 </Table>
             </div>
 
-            <div className="justify-between items-center flex p-1 gap-1">
-                <div className="flex basis-1/3 items-center self-start">
+            <div className="justify-between items-center flex p-1 gap-1 flex-wrap">
+                <div>
                     <p className="whitespace-nowrap font-bold">
                         {`Page ${table.getState().pagination.pageIndex + 1} of ${table.getPageCount()}`}
                         &nbsp;&nbsp;
@@ -217,36 +236,59 @@ export default function TicketTable({data }: TableProps) {
                     </p>
                 </div>
 
-                <div className="flex gap-1 flex-wrap">
-                    <Button
-                        variant={"outline"}
-                        onClick={() => table.resetColumnFilters()}
-                    >
-                        Reset Filter
-                    </Button>
+                <div className="flex gap-1">
+                    <div className="flex gap-1">
+                        <Button
+                            variant={"outline"}
+                            onClick={() => table.resetColumnFilters()}
+                        >
+                            Reset Filter
+                        </Button>
 
-                    <Button
-                        variant={"outline"}
-                        onClick={() => table.resetSorting()}
-                    >
-                        Reset Sorting
-                    </Button>
+                        <Button
+                            variant={"outline"}
+                            onClick={() => table.resetSorting()}
+                        >
+                            Reset Sorting
+                        </Button>
 
-                    <Button
-                        variant={"outline"}
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
+                        <Button
+                            variant={"outline"}
+                            onClick={() => router.refresh()}
+                        >
+                            Refresh Data
+                        </Button>
+                    </div>
 
-                    <Button
-                        variant={"outline"}
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
+                    <div className="flex gap-1">
+                        <Button
+                            variant={"outline"}
+                            onClick={() => {
+                                const newIndex = table.getState().pagination.pageIndex - 1;
+                                table.setPageIndex(newIndex);
+                                const params = new URLSearchParams(searchParam.toString());
+                                params.set('page', (newIndex + 1).toString());
+                                router.replace(`?${params.toString()}`, {scroll: false});
+                            }}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Previous
+                        </Button>
+
+                        <Button
+                            variant={"outline"}
+                            onClick={() => {
+                                const newIndex = table.getState().pagination.pageIndex + 1;
+                                table.setPageIndex(newIndex);
+                                const params = new URLSearchParams(searchParam.toString());
+                                params.set('page', (newIndex + 1).toString());
+                                router.replace(`?${params.toString()}`, {scroll: false});
+                            }}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Next
+                        </Button>
+                    </div>
 
                 </div>
             </div>
