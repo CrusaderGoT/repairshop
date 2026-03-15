@@ -1,33 +1,51 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { InputWithLabel } from "@/components/inputs/InputWithLabel";
-import { insertCustomerSchema, insertCustomerSchemaType, selectCustomerSchemaType } from "@/zod-schemas/customers";
-import { TextAreaWithLabel } from "@/components/inputs/TextAreaWithLable";
-import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
+import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
 import { CheckBoxWithLabel } from "@/components/inputs/CheckBoxWithLabel";
+import { InputWithLabel } from "@/components/inputs/InputWithLabel";
+import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
+import { TextAreaWithLabel } from "@/components/inputs/TextAreaWithLable";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
 import { StateArray } from "@/constants/StatesArray";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { useAction } from "next-safe-action/hooks";
 import { saveCustomerAction } from "@/drizzle/actions/customer-actions";
 import { useToast } from "@/hooks/use-toast";
+import {
+    insertCustomerSchema,
+    insertCustomerSchemaType,
+    selectCustomerSchemaType,
+} from "@/zod-schemas/customers";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle } from "lucide-react";
-import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
-
-
+import { useAction } from "next-safe-action/hooks";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 
 type customerProps = {
-    customer?: selectCustomerSchemaType,
-}
+    customer?: selectCustomerSchemaType;
+    isManager?: boolean | undefined;
+};
 
-export default function CustomerForm({ customer }: customerProps) {
-    const { getPermission, isLoading } = useKindeBrowserClient();
-    const isManager = !isLoading && getPermission("manager")?.isGranted;
-
+export default function CustomerForm({ customer, isManager }: customerProps) {
     const { toast } = useToast();
+
+    const searchParams = useSearchParams();
+    const hasCustomerId = searchParams.has("customerId");
+
+    const emptyValues: insertCustomerSchemaType = {
+        id: 0,
+        firstName: "",
+        lastName: "",
+        address: "",
+        email: "",
+        phone: "",
+        city: "",
+        zip: "",
+        state: "",
+        notes: "",
+        active: true,
+    };
 
     const defaultValues: insertCustomerSchemaType = {
         id: customer?.id ?? 0,
@@ -49,6 +67,11 @@ export default function CustomerForm({ customer }: customerProps) {
         defaultValues,
     });
 
+    useEffect(() => {
+        form.reset(hasCustomerId ? defaultValues : emptyValues);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams.get("customerId")]);
+
     const {
         execute: executeSave,
         result: saveResult,
@@ -61,7 +84,7 @@ export default function CustomerForm({ customer }: customerProps) {
                 variant: "destructive",
                 title: "Error! ❌",
                 description: "Save Failed",
-            })
+            });
         },
         onSuccess({ data }) {
             if (data?.messsage) {
@@ -70,7 +93,7 @@ export default function CustomerForm({ customer }: customerProps) {
                     variant: "default",
                     title: "Success! 🎉",
                     description: data?.messsage,
-                })
+                });
             }
         },
     });
@@ -84,15 +107,17 @@ export default function CustomerForm({ customer }: customerProps) {
             <DisplayServerActionResponse result={saveResult} />
             <div>
                 <h2 className="text-2xl font-bold">
-                    {customer?.id ? "Edit" : "New"} Customer {customer?.id ? `#${customer.id}` : 'Form'}
+                    {customer?.id ? "Edit" : "New"} Customer{" "}
+                    {customer?.id ? `#${customer.id}` : "Form"}
                 </h2>
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(submitForm)} className="flex flex-col md:flex-row gap-4 md:gap-8 m-1 sm:m-3">
-
+                <form
+                    onSubmit={form.handleSubmit(submitForm)}
+                    className="flex flex-col md:flex-row gap-4 md:gap-8 m-1 sm:m-3"
+                >
                     <div className="flex flex-col gap-4 w-full max-w-xs">
-
                         <InputWithLabel<insertCustomerSchemaType>
                             fieldTitle="First Name"
                             nameInSchema="firstName"
@@ -118,11 +143,9 @@ export default function CustomerForm({ customer }: customerProps) {
                             nameInSchema="state"
                             data={StateArray}
                         />
-
                     </div>
 
                     <div className="flex flex-col gap-4 w-full max-w-xs">
-
                         <InputWithLabel<insertCustomerSchemaType>
                             fieldTitle="Zip Code"
                             nameInSchema="zip"
@@ -144,18 +167,15 @@ export default function CustomerForm({ customer }: customerProps) {
                             className="h-40"
                         />
 
-                        {
-                        isLoading ? null : isManager && customer?.id ? (
+                        {isManager && customer?.id ? (
                             <CheckBoxWithLabel<insertCustomerSchemaType>
-                            fieldTitle="Active"
-                            nameInSchema="active"
-                            message="Yes"
+                                fieldTitle="Active"
+                                nameInSchema="active"
+                                message="Yes"
                             />
-                        ) : null
-                        }
+                        ) : null}
 
                         <div className="flex gap-2">
-
                             <Button
                                 type="submit"
                                 className="w-3/4"
@@ -165,9 +185,12 @@ export default function CustomerForm({ customer }: customerProps) {
                             >
                                 {isSaving ? (
                                     <>
-                                        <LoaderCircle className="animate-spin" /> Saving
+                                        <LoaderCircle className="animate-spin" />{" "}
+                                        Saving
                                     </>
-                                ): "Save"}
+                                ) : (
+                                    "Save"
+                                )}
                             </Button>
 
                             <Button
@@ -178,16 +201,13 @@ export default function CustomerForm({ customer }: customerProps) {
                                     form.reset(defaultValues);
                                     resetSaveAction();
                                 }}
-                            >Reset</Button>
-
+                            >
+                                Reset
+                            </Button>
                         </div>
-
                     </div>
-
-                    
-
                 </form>
             </Form>
         </div>
-    )
+    );
 }
