@@ -52,9 +52,9 @@ export default function CustomerTable({ data }: TableProps) {
         return (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button>
+                    <Button className="size-4" variant={"ghost"}>
                         <span className="sr-only">Open Menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontal />
                     </Button>
                 </DropdownMenuTrigger>
 
